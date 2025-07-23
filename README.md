@@ -1,3 +1,18 @@
+# buyIT
+
+Welcome to buyIT – your personal shopping assistant for Nigerians who want to shop from Amazon.com with ease!
+
+**How it works:**
+- Discover the top 20 most-searched Amazon products in Nigeria (powered by Google Trends).
+- Paste any Amazon link and let us handle the rest – from US delivery to your doorstep in Nigeria.
+- Flat $3 US delivery fee (thanks to our Prime membership!).
+- Pay in Naira or USD, get notified at every step, and enjoy consolidated shipping every Thursday.
+
+**Surprise:**
+Early users get a secret discount code hidden somewhere on the site. Happy hunting! 🎉
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
