@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 interface WaitlistEntry {
   id: string;
@@ -13,22 +13,28 @@ interface WaitlistEntry {
   ipAddress?: string;
 }
 
+// Initialize Redis client (uses UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars)
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
 const WAITLIST_KEY = 'shopbrow:waitlist:entries';
 
-// Get all waitlist entries from Vercel KV
+// Get all waitlist entries
 async function getWaitlistEntries(): Promise<WaitlistEntry[]> {
   try {
-    const entries = await kv.lrange<WaitlistEntry>(WAITLIST_KEY, 0, -1);
+    const entries = await redis.lrange<WaitlistEntry>(WAITLIST_KEY, 0, -1);
     return entries || [];
   } catch (error) {
-    console.error('Error reading from KV:', error);
+    console.error('Error reading from Redis:', error);
     return [];
   }
 }
 
 // Add entry to waitlist
 async function addWaitlistEntry(entry: WaitlistEntry): Promise<void> {
-  await kv.lpush(WAITLIST_KEY, entry);
+  await redis.lpush(WAITLIST_KEY, entry);
 }
 
 // Check if email exists
@@ -121,7 +127,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const adminKey = searchParams.get('adminKey');
 
-    // Simple protection - change this key!
     if (adminKey !== 'shopbrow-admin-2026') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
