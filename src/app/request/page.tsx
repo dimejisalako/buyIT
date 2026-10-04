@@ -20,7 +20,7 @@ export default function RequestPage() {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ id: string; quote: Quote } | null>(null);
+  const [result, setResult] = useState<{ id: string; track: string; quote: Quote } | null>(null);
 
   const set = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -36,7 +36,7 @@ export default function RequestPage() {
         body: JSON.stringify({ ...form, priceUsd: Number(form.priceUsd), weightLb: Number(form.weightLb), quantity: Number(form.quantity) }),
       });
       const data = await res.json();
-      if (data.success) setResult({ id: data.id, quote: data.quote });
+      if (data.success) setResult({ id: data.id, track: data.track, quote: data.quote });
       else setError(data.error || "Something went wrong.");
     } catch {
       setError("Network error. Please try again.");
@@ -75,7 +75,10 @@ export default function RequestPage() {
               About <strong>₦{result.quote.totalNgn.toLocaleString()}</strong>
               <span className="text-sm"> at ₦{result.quote.ngnPerUsd.toLocaleString()} per $1</span>
             </p>
-            <p className="mt-4 text-xs text-ink-soft">Reference: {result.id}. Duty, tax and shipping are estimates and may change once we confirm the item.</p>
+            <a href={result.track} className="mt-5 block w-full rounded-xl bg-sage py-3.5 text-center font-medium text-white hover:bg-sage-dark">
+              Track this request
+            </a>
+            <p className="mt-4 text-xs text-ink-soft">We&apos;ve emailed you this link too. Reference: {result.id}. Duty, tax and shipping are estimates and may change once we confirm the item.</p>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-5 rounded-3xl border border-line bg-white p-8 shadow-[0_12px_32px_-12px_rgba(43,47,44,0.10)]">

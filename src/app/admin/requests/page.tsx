@@ -1,8 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 
-type Status = "new" | "quoted" | "paid" | "purchased" | "shipped" | "delivered" | "rejected";
-const STATUSES: Status[] = ["new", "quoted", "paid", "purchased", "shipped", "delivered", "rejected"];
+import { STATUSES, type RequestStatus as Status } from "../../../lib/status";
 
 interface Req {
   id: string; url: string; name: string; email: string; note?: string; status: Status; createdAt: string;
@@ -36,10 +35,15 @@ export default function AdminRequests() {
   }, [load]);
 
   const update = async (id: string, status: Status) => {
+    let offline = false;
+    if (status === "paid") {
+      if (!confirm("Record an offline payment (e.g. bank transfer)? Online payments are marked paid automatically.")) return;
+      offline = true;
+    }
     const res = await fetch("/api/admin/requests", {
       method: "PATCH",
       headers: { "x-admin-key": adminKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
+      body: JSON.stringify({ id, status, offline }),
     });
     if (res.ok) setRequests((rs) => rs && rs.map((r) => (r.id === id ? { ...r, status } : r)));
     else setError("Could not update status");
@@ -49,6 +53,7 @@ export default function AdminRequests() {
     <div className="min-h-screen bg-cream px-6 py-10 text-ink">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-2xl font-semibold">Requests</h1>
+        <p className="mt-1 text-sm text-ink-soft">Changing a status emails the customer. Set &ldquo;quoted&rdquo; once you&apos;ve checked the item, and they can pay.</p>
 
         {requests === null ? (
           <form onSubmit={(e) => { e.preventDefault(); load(adminKey); }} className="mt-6 flex max-w-sm gap-3">

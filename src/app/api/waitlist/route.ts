@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { isAdmin } from '../../../lib/adminAuth';
+import { sendEmail } from '../../../lib/email';
 
 interface WaitlistEntry {
   id: string;
@@ -103,6 +104,13 @@ export async function POST(request: NextRequest) {
     };
 
     await addWaitlistEntry(newEntry);
+    if (newEntry.consentEmail) {
+      await sendEmail({
+        to: newEntry.email,
+        subject: "You're on the Shopbrow list",
+        text: `Hi ${newEntry.name},\n\nThanks for joining. We'll email you as soon as we launch.\n\nThe Shopbrow team`,
+      });
+    }
     
     // Get current count
     const entries = await getWaitlistEntries();

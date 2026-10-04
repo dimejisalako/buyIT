@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseAmazonUrl } from "../../../lib/amazon";
 import { buildQuote } from "../../../lib/quote";
 import { addRequest, rateLimited } from "../../../lib/requests";
+import { notifyReceived } from "../../../lib/notify";
+import { siteUrl, trackUrl } from "../../../lib/site";
 
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 
@@ -36,7 +38,9 @@ export async function POST(request: NextRequest) {
       quote,
     });
 
-    return NextResponse.json({ success: true, id: saved.id, url: saved.url, quote });
+    const track = trackUrl(siteUrl(request), saved.id, saved.token);
+    await notifyReceived(saved, track);
+    return NextResponse.json({ success: true, id: saved.id, track, quote });
   } catch (error) {
     console.error("Request submit error:", error);
     return bad("Something went wrong. Please try again.", 500);
