@@ -1,6 +1,40 @@
 "use client";
 import { useState } from "react";
 
+const inputClass =
+  "w-full rounded-xl border border-line bg-white px-4 py-3 text-ink placeholder:text-ink-soft/60 focus:border-sage focus:outline-none focus:ring-4 focus:ring-sage/15";
+
+function Check({
+  name,
+  checked,
+  onChange,
+  children,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 text-sm text-ink-soft">
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-[#5d7a68]"
+      />
+      <span>{children}</span>
+    </label>
+  );
+}
+
+const steps = [
+  { n: "1", title: "Paste a link", body: "Copy any Amazon.com product link and send it to us." },
+  { n: "2", title: "We buy and ship", body: "We purchase it, consolidate your orders and fly them out weekly." },
+  { n: "3", title: "Pick up in Nigeria", body: "Pay in naira or dollars. We keep you updated at every step." },
+];
+
 export default function LandingPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -79,392 +113,203 @@ export default function LandingPage() {
     formData.acceptedTerms;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
-        {/* Animated orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-500" />
-        
-        {/* Grid pattern overlay */}
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px'
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-cream text-ink">
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
+        <span className="text-xl font-semibold tracking-tight">
+          Shop<span className="text-sage">brow</span>
+        </span>
+        <span className="text-sm text-ink-soft">Coming soon</span>
+      </header>
 
-      {/* Main content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="py-6 px-8">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <span className="text-2xl font-bold text-white tracking-tight">
-                Shop<span className="text-emerald-400">brow</span>
-              </span>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 text-amber-400/90 text-sm font-medium">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
-              </svg>
-              Coming Soon
-            </div>
-          </div>
-        </header>
+      <main className="mx-auto grid max-w-5xl gap-14 px-6 pb-20 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:pt-16">
+        <section>
+          <p className="mb-5 text-sm font-medium text-sage">Early access is open</p>
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            Amazon, delivered to Nigeria. Without the stress.
+          </h1>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
+            Paste a product link and we handle the rest: buying, consolidating and shipping to your door.
+          </p>
 
-        {/* Hero Section */}
-        <main className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="max-w-6xl w-full grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left column - Copy */}
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-8">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                Now accepting early access signups
-              </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                Shop Amazon.
-                <br />
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-amber-400 bg-clip-text text-transparent">
-                  Delivered to Nigeria.
+          <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-8">
+            <div>
+              <dt className="text-sm text-ink-soft">Service fee</dt>
+              <dd className="mt-1 font-medium">$1.50 per item</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-ink-soft">Shipments</dt>
+              <dd className="mt-1 font-medium">Weekly</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-ink-soft">Shipping</dt>
+              <dd className="mt-1 font-medium">By weight</dd>
+            </div>
+          </dl>
+
+          <ol className="mt-12 space-y-6">
+            {steps.map((step) => (
+              <li key={step.n} className="flex gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage/10 text-sm font-medium text-sage">
+                  {step.n}
                 </span>
-              </h1>
-              
-              <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                No more expensive shipping fees. We consolidate your Amazon purchases and deliver them to your doorstep in Nigeria. <span className="text-amber-400 font-semibold">$1.50 service fee</span> per item + shipping fees.
-              </p>
+                <div>
+                  <p className="font-medium">{step.title}</p>
+                  <p className="text-ink-soft">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-              {/* Stats */}
-              <div className="flex flex-wrap justify-center lg:justify-start gap-8 mb-8">
-                <div className="text-center lg:text-left">
-                  <div className="text-3xl font-bold text-white">$1.50</div>
-                  <div className="text-slate-400 text-sm">Per Item + US Delivery</div>
-                </div>
-                <div className="text-center lg:text-left">
-                  <div className="text-3xl font-bold text-white">Weekly</div>
-                  <div className="text-slate-400 text-sm">Shipments to Nigeria</div>
-                </div>
-                <div className="text-center lg:text-left">
-                  <div className="text-3xl font-bold text-white">By Weight</div>
-                  <div className="text-slate-400 text-sm">Shipping Fees</div>
-                </div>
-              </div>
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-slate-400 text-sm">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        <section className="lg:pt-2">
+          <div className="rounded-3xl border border-line bg-white p-8 shadow-[0_1px_2px_rgba(43,47,44,0.04),0_12px_32px_-12px_rgba(43,47,44,0.10)]">
+            {submitStatus.type === "success" ? (
+              <div className="py-6 text-center" role="status">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-sage/10 text-sage">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Secure Payments
                 </div>
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
-                  </svg>
-                  No Hidden Fees
-                </div>
-              </div>
-            </div>
-
-            {/* Right column - Form */}
-            <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Join the Interest List
-                  </h2>
-                  <p className="text-slate-400">
-                    Be the first to know when we launch
-                  </p>
-                </div>
-
-                {submitStatus.type === "success" ? (
-                  <div className="text-center py-8">
-                    <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">You&apos;re on the list!</h3>
-                    <p className="text-slate-400 mb-4">{submitStatus.message}</p>
-                    {submitStatus.position && (
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-sm font-medium">
-                        You&apos;re #{submitStatus.position} on the waitlist
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Name */}
-                    <div>
-                      <label className="block text-slate-300 text-sm font-medium mb-2">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="John Doe"
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                        required
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-slate-300 text-sm font-medium mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="john@example.com"
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                        required
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="block text-slate-300 text-sm font-medium mb-2">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+234 XXX XXX XXXX"
-                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                        required
-                      />
-                    </div>
-
-                    {/* Consent checkboxes */}
-                    <div className="space-y-3 pt-2">
-                      <p className="text-slate-400 text-sm font-medium">
-                        How can we contact you?
-                      </p>
-                      
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="relative mt-0.5">
-                          <input
-                            type="checkbox"
-                            name="consentEmail"
-                            checked={formData.consentEmail}
-                            onChange={handleInputChange}
-                            className="sr-only peer"
-                          />
-                          <div className="w-5 h-5 bg-white/5 border border-white/20 rounded-md peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center">
-                            {formData.consentEmail && (
-                              <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-slate-300 text-sm">
-                          I consent to receive updates via <strong>email</strong>
-                        </span>
-                      </label>
-
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="relative mt-0.5">
-                          <input
-                            type="checkbox"
-                            name="consentSms"
-                            checked={formData.consentSms}
-                            onChange={handleInputChange}
-                            className="sr-only peer"
-                          />
-                          <div className="w-5 h-5 bg-white/5 border border-white/20 rounded-md peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center">
-                            {formData.consentSms && (
-                              <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-slate-300 text-sm">
-                          I consent to receive updates via <strong>SMS/text</strong>
-                        </span>
-                      </label>
-                    </div>
-
-                    {/* Terms checkbox */}
-                    <div className="pt-2">
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="relative mt-0.5">
-                          <input
-                            type="checkbox"
-                            name="acceptedTerms"
-                            checked={formData.acceptedTerms}
-                            onChange={handleInputChange}
-                            className="sr-only peer"
-                          />
-                          <div className="w-5 h-5 bg-white/5 border border-white/20 rounded-md peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center">
-                            {formData.acceptedTerms && (
-                              <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-slate-300 text-sm">
-                          I agree to the{" "}
-                          <button
-                            type="button"
-                            onClick={() => setShowTermsModal(true)}
-                            className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
-                          >
-                            Terms & Conditions
-                          </button>
-                        </span>
-                      </label>
-                    </div>
-
-                    {/* Error message */}
-                    {submitStatus.type === "error" && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
-                        {submitStatus.message}
-                      </div>
-                    )}
-
-                    {/* Submit button */}
-                    <button
-                      type="submit"
-                      disabled={!isFormValid || isSubmitting}
-                      className={`w-full py-4 rounded-xl font-semibold text-lg transition-all transform ${
-                        isFormValid && !isSubmitting
-                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/25"
-                          : "bg-slate-700 text-slate-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Joining...
-                        </span>
-                      ) : (
-                        "Join the Interest List"
-                      )}
-                    </button>
-
-                    <p className="text-center text-slate-500 text-xs">
-                      We respect your privacy. Unsubscribe anytime.
-                    </p>
-                  </form>
+                <h2 className="text-xl font-semibold">You&apos;re on the list</h2>
+                <p className="mt-2 text-ink-soft">{submitStatus.message}</p>
+                {submitStatus.position && (
+                  <p className="mt-4 text-sm text-ink-soft">You&apos;re #{submitStatus.position}.</p>
                 )}
               </div>
-            </div>
-          </div>
-        </main>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <h2 className="text-xl font-semibold">Join the interest list</h2>
+                  <p className="mt-1 text-ink-soft">We&apos;ll let you know when we launch.</p>
+                </div>
 
-        {/* Footer */}
-        <footer className="py-8 px-6 border-t border-white/5">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-sm">
-            <p>© 2026 Shopbrow. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() => setShowTermsModal(true)}
-                className="hover:text-slate-300 transition-colors"
-              >
-                Terms & Conditions
-              </button>
-              <a href="mailto:support@shopbrow.com" className="hover:text-slate-300 transition-colors">
-                Contact
-              </a>
-            </div>
-          </div>
-        </footer>
-      </div>
+                <div>
+                  <label htmlFor="name" className="mb-1.5 block text-sm font-medium">Full name</label>
+                  <input id="name" type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Ada Okafor" autoComplete="name" className={inputClass} required />
+                </div>
+                <div>
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium">Email</label>
+                  <input id="email" type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="ada@example.com" autoComplete="email" className={inputClass} required />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="mb-1.5 block text-sm font-medium">Phone</label>
+                  <input id="phone" type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+234 800 000 0000" autoComplete="tel" className={inputClass} required />
+                </div>
 
-      {/* Terms & Conditions Modal */}
+                <fieldset className="space-y-3 pt-1">
+                  <legend className="mb-2 text-sm font-medium">How can we reach you?</legend>
+                  <Check name="consentEmail" checked={formData.consentEmail} onChange={handleInputChange}>
+                    Updates by email
+                  </Check>
+                  <Check name="consentSms" checked={formData.consentSms} onChange={handleInputChange}>
+                    Updates by SMS
+                  </Check>
+                </fieldset>
+
+                <Check name="acceptedTerms" checked={formData.acceptedTerms} onChange={handleInputChange}>
+                  I agree to the{" "}
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-sage underline underline-offset-2 hover:text-sage-dark"
+                  >
+                    Terms &amp; Conditions
+                  </button>
+                </Check>
+
+                {submitStatus.type === "error" && (
+                  <p role="alert" className="rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">
+                    {submitStatus.message}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!isFormValid || isSubmitting}
+                  className="w-full rounded-xl bg-sage py-3.5 font-medium text-white hover:bg-sage-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/25 disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-soft"
+                >
+                  {isSubmitting ? "Joining…" : "Join the list"}
+                </button>
+                <p className="text-center text-xs text-ink-soft">
+                  We respect your privacy. Unsubscribe anytime.
+                </p>
+              </form>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-sm text-ink-soft sm:flex-row">
+          <p>© 2026 Shopbrow</p>
+          <div className="flex gap-6">
+            <button onClick={() => setShowTermsModal(true)} className="hover:text-ink">
+              Terms &amp; Conditions
+            </button>
+            <a href="mailto:support@shopbrow.com" className="hover:text-ink">Contact</a>
+          </div>
+        </div>
+      </footer>
+
       {showTermsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowTermsModal(false)}
-          />
-          <div className="relative bg-slate-900 border border-white/10 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
-            <div className="sticky top-0 bg-slate-900 border-b border-white/10 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white">Terms & Conditions</h3>
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="text-slate-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Terms and Conditions">
+          <div className="absolute inset-0 bg-ink/40" onClick={() => setShowTermsModal(false)} />
+          <div className="relative flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="text-lg font-semibold">Terms &amp; Conditions</h3>
+              <button onClick={() => setShowTermsModal(false)} aria-label="Close" className="text-ink-soft hover:text-ink">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[60vh] text-slate-300 space-y-4">
-              <h4 className="text-lg font-semibold text-white">1. Interest List Terms</h4>
+            <div className="space-y-3 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-ink-soft">
+              <h4 className="font-medium text-ink">1. Interest List Terms</h4>
               <p>
                 By joining the Shopbrow interest list, you agree to receive communications about our service launch, 
                 updates, and promotional offers through your selected contact methods (email and/or SMS).
               </p>
 
-              <h4 className="text-lg font-semibold text-white">2. Service Description</h4>
+              <h4 className="font-medium text-ink">2. Service Description</h4>
               <p>
                 Shopbrow is a shopping assistance service that helps Nigerian customers purchase products from 
                 Amazon.com. We consolidate purchases and arrange delivery to Nigeria for a flat service fee.
               </p>
 
-              <h4 className="text-lg font-semibold text-white">3. Data Collection & Privacy</h4>
+              <h4 className="font-medium text-ink">3. Data Collection & Privacy</h4>
               <p>
                 We collect your name, email, and phone number solely for the purpose of contacting you about 
                 our service. Your data is stored securely and will not be sold to third parties.
               </p>
 
-              <h4 className="text-lg font-semibold text-white">4. Communication Consent</h4>
+              <h4 className="font-medium text-ink">4. Communication Consent</h4>
               <p>
                 By checking the consent boxes, you authorize Shopbrow to contact you via your selected methods. 
                 You can unsubscribe at any time by contacting us at support@shopbrow.com.
               </p>
 
-              <h4 className="text-lg font-semibold text-white">5. SMS Terms</h4>
+              <h4 className="font-medium text-ink">5. SMS Terms</h4>
               <p>
                 Message and data rates may apply for SMS communications. Message frequency varies based on 
                 account activity and promotions.
               </p>
 
-              <h4 className="text-lg font-semibold text-white">6. Changes to Terms</h4>
+              <h4 className="font-medium text-ink">6. Changes to Terms</h4>
               <p>
                 We reserve the right to modify these terms at any time. Continued participation in our 
                 interest list after changes constitutes acceptance of the new terms.
               </p>
 
-              <h4 className="text-lg font-semibold text-white">7. Contact Information</h4>
+              <h4 className="font-medium text-ink">7. Contact Information</h4>
               <p>
                 For any questions about these terms, please contact us at:<br />
                 Email: support@shopbrow.com<br />
                 Location: Lagos, Nigeria
               </p>
             </div>
-            <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 px-6 py-4">
-              <button
-                onClick={() => setShowTermsModal(false)}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-colors"
-              >
-                I Understand
+            <div className="border-t border-line px-6 py-4">
+              <button onClick={() => setShowTermsModal(false)} className="w-full rounded-xl bg-sage py-3 font-medium text-white hover:bg-sage-dark">
+                Close
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { isAdmin } from '../../../lib/adminAuth';
 
 interface WaitlistEntry {
   id: string;
@@ -123,11 +124,7 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve waitlist data (for admin purposes)
 export async function GET(request: NextRequest) {
   try {
-    // Simple auth check via query param
-    const { searchParams } = new URL(request.url);
-    const adminKey = searchParams.get('adminKey');
-
-    if (adminKey !== 'shopbrow-admin-2026') {
+    if (!isAdmin(request)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

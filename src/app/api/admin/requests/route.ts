@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
+import { isAdmin } from '../../../../lib/adminAuth';
 import { getAllRequests } from '../../../../lib/database';
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!isAdmin(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const requests = getAllRequests();
     

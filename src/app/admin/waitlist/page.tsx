@@ -24,7 +24,7 @@ export default function WaitlistAdmin() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/waitlist?adminKey=${adminKey}`);
+      const response = await fetch('/api/waitlist', { headers: { 'x-admin-key': adminKey } });
       const data = await response.json();
 
       if (data.success) {
@@ -109,9 +109,6 @@ export default function WaitlistAdmin() {
               {loading ? "Loading..." : "Access Waitlist"}
             </button>
           </form>
-          <p className="text-slate-500 text-sm mt-4 text-center">
-            Default key: <code className="bg-slate-700 px-2 py-1 rounded">shopbrow-admin-2026</code>
-          </p>
         </div>
       </div>
     );

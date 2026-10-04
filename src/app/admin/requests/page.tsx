@@ -24,7 +24,7 @@ export default function AdminRequests() {
     const fetchRequests = async () => {
       try {
         console.log('Fetching requests from API...');
-        const response = await fetch('/api/admin/requests');
+        const response = await fetch('/api/admin/requests', { headers: { 'x-admin-key': localStorage.getItem('shopbrow-admin-key') || '' } });
         console.log('Response status:', response.status);
         
         if (!response.ok) {
