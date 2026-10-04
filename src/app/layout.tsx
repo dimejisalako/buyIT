@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "../context/AppContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Shopbrow - Your Amazon Shopping Assistant for Nigeria",
-  description: "Shop from Amazon.com with ease! We buy for you and ship to Nigeria. Flat $1.50 service fee per item + shipping fees based on weight.",
+  description: "Shop from Amazon.com with ease! We buy for you and ship to Nigeria. $1.50 service fee per item plus shipping by weight.",
 };
 
 export default function RootLayout({
@@ -28,9 +27,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppProvider>
-          {children}
-        </AppProvider>
+        {children}
       </body>
     </html>
   );
