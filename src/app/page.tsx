@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-white px-4 py-3 text-ink placeholder:text-ink-soft/60 focus:border-sage focus:outline-none focus:ring-4 focus:ring-sage/15";
@@ -130,6 +131,10 @@ export default function LandingPage() {
           <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
             Paste a product link and we handle the rest: buying, consolidating and shipping to your door.
           </p>
+
+          <Link href="/request" className="mt-8 inline-block text-sage underline underline-offset-4 hover:text-sage-dark">
+            Already have an item in mind? Get a naira estimate
+          </Link>
 
           <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-8">
             <div>
