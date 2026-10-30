@@ -1,51 +1,39 @@
-# buyIT
+# Shopbrow
 
-Welcome to buyIT – your personal shopping assistant for Nigerians who want to shop from Amazon.com with ease!
+Nigerians paste an Amazon.com link. We buy it, consolidate it and ship it to Nigeria. Pay in naira.
 
-**How it works:**
-- Discover the top 20 most-searched Amazon products in Nigeria (powered by Google Trends).
-- Paste any Amazon link and let us handle the rest – from US delivery to your doorstep in Nigeria.
-- Flat $3 US delivery fee (thanks to our Prime membership!).
-- Pay in Naira or USD, get notified at every step, and enjoy consolidated shipping every Thursday.
+## How it works
 
-**Surprise:**
-Early users get a secret discount code hidden somewhere on the site. Happy hunting! 🎉
+1. **Request** (`/request`): the customer pastes a link, enters price, weight and quantity, and gets an itemised estimate in USD and naira.
+2. **Review** (`/admin/requests`): you check the item and set the request to **quoted**. The customer is emailed a link.
+3. **Pay** (`/track/[id]`): the customer pays through Paystack. A verified payment moves the request to **paid** automatically.
+4. **Fulfil**: you move it through **purchased**, **shipped** and **delivered**. Each change emails the customer.
 
----
+The landing page (`/`) is the waitlist. Admin pages are at `/admin/waitlist` and `/admin/requests` and need `ADMIN_KEY`.
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
+## Setup
 
 ```bash
+cp .env.example .env.local   # fill it in
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Needed for |
+| --- | --- |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Storing the waitlist and requests (required) |
+| `ADMIN_KEY` | Admin pages (required; they refuse everyone without it) |
+| `PAYSTACK_SECRET_KEY` | Online payment. Add the webhook `{SITE_URL}/api/paystack/webhook` in the Paystack dashboard |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL` | Email. Without a key, emails are skipped and logged |
+| `SITE_URL` | Links in emails and the payment callback |
+| `SERVICE_FEE_USD`, `SHIPPING_USD_PER_LB`, `US_SALES_TAX_RATE`, `DUTY_RATE`, `PAYMENT_FEE_RATE`, `NGN_PER_USD`, `FX_BUFFER_RATE` | The quote engine. **Defaults are placeholders**; set real values before charging anyone |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Safety notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Customers get a secret token in their tracking link. It is required to view or pay for a request, and the tracking API never returns their contact details.
+- A payment only counts if Paystack confirms it, the amount matches the quote in naira, and the reference is the latest one issued for that request. The webhook signature is checked and the transaction is re-verified with Paystack.
+- Amazon links are parsed strictly (`amazon.com` and its subdomains only). Price and weight are entered by the customer and checked by you before you set **quoted**. We do not scrape Amazon.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`npm test` (unit tests), `npm run build`, `npm run typecheck`. CI runs tests and a build on every PR.
