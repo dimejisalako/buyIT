@@ -27,8 +27,10 @@ export interface Quote {
 
 const cents = (n: number) => Math.round(n * 100) / 100;
 
-export function buildQuote(input: { itemPriceUsd: number; weightLb: number; quantity?: number }): Quote {
-  const r = rates();
+export type Rates = ReturnType<typeof rates>;
+
+// Pass `r` to price with specific rates (the admin form previews on the client with rates from the server).
+export function buildQuote(input: { itemPriceUsd: number; weightLb: number; quantity?: number }, r: Rates = rates()): Quote {
   const quantity = Math.max(1, Math.floor(input.quantity ?? 1));
   const goods = input.itemPriceUsd * quantity;
   const weight = input.weightLb * quantity;

@@ -60,11 +60,14 @@ export const nextStatus = (s: RequestStatus): RequestStatus | null => {
 
 // Rules for admin-driven status changes. Payment is only ever set by Paystack or an explicit offline payment.
 // Returns an error message, or null if the move is allowed.
-export function transitionError(req: { status: RequestStatus; paidAt?: string }, to: RequestStatus): string | null {
+export function transitionError(req: { status: RequestStatus; paidAt?: string; hasQuote?: boolean }, to: RequestStatus): string | null {
   if (to === req.status) return null; // same status: just adds a note
   if (to === "rejected") return null;
   if (to === "new") return "A request can't go back to under review.";
-  if (to === "quoted") return req.status === "new" || req.status === "rejected" ? null : "Only a new request can be quoted.";
+  if (to === "quoted") {
+    if (req.hasQuote === false) return "Add the price and weight first, then send the quote.";
+    return req.status === "new" || req.status === "rejected" ? null : "Only a new request can be quoted.";
+  }
   if (to === "paid") return req.status === "quoted" ? null : "Only a quoted request can be marked paid.";
   if (POST_PAYMENT.includes(to) && !req.paidAt) return "This order hasn't been paid yet.";
   return null;

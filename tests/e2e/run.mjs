@@ -64,7 +64,9 @@ const ok = (name, cond, extra = "") => {
   console.log((cond ? "PASS " : "FAIL ") + name + (cond ? "" : "  " + extra));
 };
 
-const goodRequest = { url: "https://www.amazon.com/Sony/dp/B09XS7JWHH?th=1", title: "Sony WH-1000XM5", priceUsd: 100, weightLb: 2, quantity: 1 };
+const goodRequest = { url: "https://www.amazon.com/Sony-WH-1000XM5-Headphones/dp/B09XS7JWHH?th=1" }; // customers send only a link
+const guessed = "Sony WH 1000XM5 Headphones";
+const details = { title: "Sony WH-1000XM5 headphones", priceUsd: 100, weightLb: 2, quantity: 1 };
 const signupBody = (n) => ({ name: "Ada Okafor " + n, email: `ada${n}@example.com`, phone: "+234 801 234 5678", password: "password-" + n + "-ok" });
 
 try {
@@ -97,12 +99,16 @@ try {
   ok("account page renders for customer", (await a.get("/account")).status === 200);
   ok("request page renders for customer", (await a.get("/request")).status === 200);
   ok("rejects look-alike Amazon host", (await a.post("/api/requests", { ...goodRequest, url: "https://amazon.com.evil.example/dp/B09XS7JWHH" })).status === 400);
-  ok("rejects missing item name", (await a.post("/api/requests", { ...goodRequest, title: "" })).status === 400);
+  ok("rejects an Amazon search page (not a product)", (await a.post("/api/requests", { url: "https://www.amazon.com/s?k=headphones" })).status === 400);
+  ok("rejects a non-Amazon link", (await a.post("/api/requests", { url: "https://example.com/dp/B09XS7JWHH" })).status === 400);
+  const short = await a.post("/api/requests", { url: "https://a.co/d/abc123", note: "Size M" });
+  ok("accepts a short link from the Amazon app", short.status === 200 && short.json.id, JSON.stringify(short.json));
   const cr = await a.post("/api/requests", goodRequest);
   ok("customer creates a request", cr.status === 200 && cr.json.id, JSON.stringify(cr.json));
   const orderId = cr.json.id;
-  ok("order appears in the customer's account", (await a.get("/account")).text.includes("Sony WH-1000XM5"));
-  ok("order detail page shows the quote", (await a.get("/account/orders/" + orderId)).text.includes("Your quote"));
+  ok("order appears in the customer's account with a readable name", (await a.get("/account")).text.includes(guessed));
+  const fresh = (await a.get("/account/orders/" + orderId)).text;
+  ok("a new order says the quote is being prepared (no quote yet)", fresh.includes("Under review") && !fresh.includes("Your quote"));
   ok("unpaid order can't be paid yet (409)", (await a.post("/api/pay/" + orderId, {})).status === 409);
 
   // --- customer B can't touch A's order
@@ -110,7 +116,7 @@ try {
   await b.post("/api/auth/signup", signupBody(2));
   ok("another customer can't open the order (404)", (await b.get("/account/orders/" + orderId)).status === 404);
   ok("another customer can't pay it (404)", (await b.post("/api/pay/" + orderId, {})).status === 404);
-  ok("another customer doesn't see it listed", !(await b.get("/account")).text.includes("Sony WH-1000XM5"));
+  ok("another customer doesn't see it listed", !(await b.get("/account")).text.includes(guessed));
   ok("customers can't use admin API (403)", (await b.patch("/api/admin/requests", { id: orderId, status: "quoted" })).status === 403);
   ok("customers are bounced from /admin", !!(await b.get("/admin")).location?.includes("/account"));
   ok("cross-site POST is blocked (403)", (await b.post("/api/auth/logout", {}, { origin: "https://evil.example" })).status === 403);
@@ -121,7 +127,7 @@ try {
   const setup = await admin.post("/api/admin/setup", { adminKey: ADMIN_KEY, name: "The Boss", email: "boss@example.com", password: "boss-password-1" });
   ok("admin setup creates the admin and signs in", setup.status === 200 && admin.cookie.startsWith("sb_session="), JSON.stringify(setup.json));
   const dash = await admin.get("/admin");
-  ok("admin dashboard lists the customer's order", dash.status === 200 && dash.text.includes("Sony WH-1000XM5") && dash.text.includes("Ada Okafor 1"));
+  ok("admin dashboard lists the customer's order and link", dash.status === 200 && dash.text.includes(guessed) && dash.text.includes("Ada Okafor 1") && dash.text.includes("amazon.com/dp/B09XS7JWHH"));
   ok("admin dashboard never leaks password hashes", !dash.text.includes("scrypt$"));
   ok("admin is sent to /admin from /account", !!(await admin.get("/account")).location?.includes("/admin"));
 
@@ -129,8 +135,16 @@ try {
   const move = (status, extra = {}) => admin.patch("/api/admin/requests", { id: orderId, status, ...extra });
   ok("can't mark purchased before payment (409)", (await move("purchased")).status === 409);
   ok("can't mark paid by hand without offline (400)", (await move("paid")).status === 400);
-  ok("admin sends the quote", (await move("quoted", { note: "Looks good" })).json?.request?.status === "quoted");
-  ok("customer sees 'Ready to pay'", (await a.get("/account/orders/" + orderId)).text.includes("Ready to pay"));
+  ok("can't send a quote without the price and weight (409)", (await move("quoted")).status === 409);
+  ok("rejects a zero price (400)", (await move("quoted", { details: { ...details, priceUsd: 0 } })).status === 400);
+  ok("rejects a missing weight (400)", (await move("quoted", { details: { ...details, weightLb: "" } })).status === 400);
+  const q1 = await move("quoted", { details, note: "Looks good" });
+  ok("admin prepares and sends the quote", q1.json?.request?.status === "quoted" && q1.json.request.quote?.totalNgn > 0 && q1.json.request.title === details.title, JSON.stringify(q1.json));
+  const firstTotal = q1.json.request.quote.totalNgn;
+  const page1 = (await a.get("/account/orders/" + orderId)).text;
+  ok("customer sees 'Ready to pay', the quote and the corrected name", page1.includes("Ready to pay") && page1.includes("Your quote") && page1.includes("Sony WH-1000XM5 headphones"));
+  const q2 = await move("quoted", { details: { ...details, priceUsd: 120 } });
+  ok("admin can revise the quote before payment", q2.json?.request?.quote?.totalNgn > firstTotal, JSON.stringify(q2.json));
 
   const pay = await a.post("/api/pay/" + orderId, {});
   ok("customer starts online payment", pay.status === 200 && pay.json.url?.includes("checkout.example"), JSON.stringify(pay.json));
@@ -153,11 +167,12 @@ try {
   ok("customer sees tracking notes in their updates", final.text.includes("DHL 1234567890") && final.text.includes("Left with the doorman"));
   ok("customer sees the order as delivered", final.text.includes("Delivered"));
   ok("note-only update works on a delivered order", (await move("delivered", { note: "Thanks!" })).status === 200);
+  ok("a paid order's quote can't be changed (409)", (await move("delivered", { details })).status === 409);
 
   // --- underpaid transaction must not settle
-  const c2 = await a.post("/api/requests", { ...goodRequest, title: "Second item", priceUsd: 50 });
+  const c2 = await a.post("/api/requests", { url: "https://www.amazon.com/dp/B0CHX1F7J6" });
   const id2 = c2.json.id;
-  await admin.patch("/api/admin/requests", { id: id2, status: "quoted" });
+  await admin.patch("/api/admin/requests", { id: id2, status: "quoted", details: { title: "Second item", priceUsd: 50, weightLb: 1, quantity: 1 } });
   const pay2 = await a.post("/api/pay/" + id2, {});
   const ref2 = pay2.json.url.split("/").pop();
   await fetch(`http://localhost:${PAYSTACK_PORT}/__succeed/${ref2}`);

@@ -6,8 +6,8 @@ import { getCurrentUser } from "../lib/auth";
 import { rates } from "../lib/quote";
 
 const steps = [
-  { title: "Paste a link", body: "Copy any Amazon.com product link and enter the price and weight shown on the page." },
-  { title: "Get your total in naira", body: "We show an itemised estimate straight away, then check the item and confirm your final quote." },
+  { title: "Paste a link", body: "Copy any Amazon.com product link and paste it in. That's all you do." },
+  { title: "Get your total in naira", body: "We check the item, the weight and the shipping, and send you one clear total in naira." },
   { title: "Pay", body: "Pay your quote in naira. We don't buy anything until you've paid." },
   { title: "Track it to your door", body: "We order it, receive it in the US and ship to Nigeria every week. You'll see every step in your account." },
 ];
@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: "How do I pay?",
-    a: "Once we've confirmed your item and sent your final quote, you pay in naira from your order page. Payment instructions are shown there.",
+    a: "Once we've checked your item and sent your total, you pay in naira from your order page. Payment instructions are shown there.",
   },
   {
     q: "What can't I order?",
@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     q: "What if the price changes or the item is unavailable?",
-    a: "We check every request before you pay. If the price has changed we'll update your quote, and if an item can't be bought we'll tell you and you won't be charged.",
+    a: "We check every request before you pay, so the total you see is based on the current price. If an item can't be bought, we'll tell you and you won't be charged.",
   },
   {
     q: "I forgot my password.",
@@ -54,7 +54,7 @@ export default async function Home() {
             Amazon, delivered to Nigeria. Without the stress.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">
-            Paste a product link and we handle the rest: buying, shipping and delivery. Pay in naira and follow every step from your account.
+            Just paste a product link. We work out the price, weight and shipping, buy it, ship it and deliver it. You pay in naira and follow every step from your account.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href={cta} className={primaryButton + " px-7 py-3.5"}>

@@ -11,7 +11,7 @@ export async function settlePayment(txn: PaystackTxn, request?: Request): Promis
   if (txn.status !== "success" || !id) return null;
 
   const req = await getRequest(id);
-  if (!req || req.status !== "quoted") return req; // already settled, or not payable
+  if (!req || req.status !== "quoted" || !req.quote) return req; // already settled, or not payable
   if (txn.reference !== req.paymentRef) return null;
   if (txn.currency !== "NGN" || txn.amount !== req.quote.totalNgn * 100) {
     console.error("[payments] amount mismatch for " + id + ":", txn.amount, txn.currency);

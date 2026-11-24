@@ -1,9 +1,10 @@
 "use client";
 import { useMemo, useState } from "react";
+import { buildQuote, type Quote, type Rates } from "../lib/quote";
 import type { ProductRequest } from "../lib/requests";
 import { ACTION_LABEL, POST_PAYMENT, STATUS_LABEL, nextStatus, type RequestStatus } from "../lib/status";
 import StatusBadge from "./StatusBadge";
-import { errorBox, inputClass, ngn, okBox, primaryButton, secondaryButton } from "./ui";
+import { errorBox, inputClass, ngn, okBox, primaryButton, secondaryButton, usd } from "./ui";
 
 export type AdminOrder = ProductRequest & { customer: { id: string; name: string; email: string; phone: string } };
 export interface AdminCustomer {
@@ -17,6 +18,7 @@ export interface AdminCustomer {
 }
 
 type Filter = "action" | "all" | RequestStatus;
+type Details = { title: string; priceUsd: number; weightLb: number; quantity: number };
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -24,16 +26,77 @@ const when = (iso: string) =>
 // Orders waiting on us: new ones to quote, paid ones to buy.
 const needsAction = (s: RequestStatus) => s === "new" || s === "paid";
 
-function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: AdminOrder) => void }) {
+// Item details -> quote, with a live total so you can check the figures before sending.
+function QuoteForm({
+  order, rates, busy, onSend,
+}: {
+  order: AdminOrder;
+  rates: Rates;
+  busy: boolean;
+  onSend: (details: Details) => void;
+}) {
+  const q = order.quote;
+  const [title, setTitle] = useState(order.title);
+  const [price, setPrice] = useState(q ? String(q.itemPriceUsd) : "");
+  const [weight, setWeight] = useState(q ? String(q.weightLb) : "");
+  const [quantity, setQuantity] = useState(q ? String(q.quantity) : "1");
+
+  const valid = Number(price) > 0 && Number(weight) > 0 && Number.isInteger(Number(quantity)) && Number(quantity) >= 1 && title.trim().length >= 2;
+  const preview: Quote | null = valid
+    ? buildQuote({ itemPriceUsd: Number(price), weightLb: Number(weight), quantity: Number(quantity) }, rates)
+    : null;
+
+  return (
+    <div className="space-y-3 rounded-xl bg-cream p-4">
+      <p className="text-sm font-medium">{order.status === "quoted" ? "Update the quote" : "Prepare the quote"}</p>
+      <label className="block text-sm">
+        <span className="mb-1 block text-ink-soft">Item name</span>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className={inputClass} />
+      </label>
+      <div className="grid grid-cols-3 gap-3">
+        <label className="block text-sm">
+          <span className="mb-1 block text-ink-soft">Price (USD)</span>
+          <input type="number" min="0.01" step="0.01" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass} />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block text-ink-soft">Weight (lb)</span>
+          <input type="number" min="0.1" step="0.1" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} className={inputClass} />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block text-ink-soft">Quantity</span>
+          <input type="number" min="1" max="20" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} className={inputClass} />
+        </label>
+      </div>
+      {preview && (
+        <p className="text-sm">
+          Customer total: <strong>{ngn(preview.totalNgn)}</strong>{" "}
+          <span className="text-ink-soft">({usd(preview.totalUsd)}; tax {usd(preview.lines[1].usd)}, shipping {usd(preview.lines[2].usd)}, duty {usd(preview.lines[3].usd)})</span>
+        </p>
+      )}
+      <button
+        type="button"
+        disabled={busy || !valid}
+        onClick={() => onSend({ title: title.trim(), priceUsd: Number(price), weightLb: Number(weight), quantity: Number(quantity) })}
+        className={primaryButton + " !py-2.5 text-sm"}
+      >
+        {order.status === "quoted" ? "Update and re-send quote" : "Send quote"}
+      </button>
+    </div>
+  );
+}
+
+function OrderCard({ order, rates, onChange }: { order: AdminOrder; rates: Rates; onChange: (o: AdminOrder) => void }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const phoneDigits = order.customer.phone.replace(/[^\d]/g, "");
+  const canQuote = !order.paidAt && (order.status === "new" || order.status === "quoted");
+  // "new" is moved on by the quote form; a rejected order can be reopened if it has a quote.
   const next: RequestStatus | null =
-    order.status === "rejected" ? "quoted" : nextStatus(order.status);
+    order.status === "new" ? null : order.status === "rejected" ? (order.quote ? "quoted" : null) : nextStatus(order.status);
 
-  const send = async (status: RequestStatus, opts?: { offline?: boolean; confirmText?: string }) => {
+  const send = async (status: RequestStatus, opts?: { offline?: boolean; confirmText?: string; details?: Details }) => {
     if (opts?.confirmText && !confirm(opts.confirmText)) return;
     setBusy(true);
     setError("");
@@ -41,7 +104,7 @@ function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: Admin
       const res = await fetch("/api/admin/requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: order.id, status, note, offline: opts?.offline }),
+        body: JSON.stringify({ id: order.id, status, note, offline: opts?.offline, details: opts?.details }),
       });
       const data = await res.json();
       if (data.success) {
@@ -64,8 +127,8 @@ function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: Admin
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">{order.title}</p>
-          <a href={order.url} target="_blank" rel="noopener noreferrer" className="text-sm text-sage underline underline-offset-2">
-            Open on Amazon
+          <a href={order.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-sage underline underline-offset-2">
+            Open the Amazon link
           </a>
           <p className="mt-1 text-sm text-ink-soft">
             {order.customer.name} ·{" "}
@@ -83,9 +146,15 @@ function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: Admin
         </div>
         <div className="text-right text-sm">
           <StatusBadge status={order.status} />
-          <p className="mt-2 font-medium">{ngn(order.quote.totalNgn)}</p>
-          <p className="text-ink-soft">${order.quote.totalUsd.toFixed(2)} · qty {order.quote.quantity}</p>
-          <p className="text-ink-soft">{order.quote.weightLb * order.quote.quantity} lb</p>
+          {order.quote ? (
+            <>
+              <p className="mt-2 font-medium">{ngn(order.quote.totalNgn)}</p>
+              <p className="text-ink-soft">${order.quote.totalUsd.toFixed(2)} · qty {order.quote.quantity}</p>
+              <p className="text-ink-soft">{order.quote.weightLb * order.quote.quantity} lb</p>
+            </>
+          ) : (
+            <p className="mt-2 text-ink-soft">No quote yet</p>
+          )}
         </div>
       </div>
 
@@ -97,6 +166,16 @@ function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: Admin
       )}
 
       <div className="mt-4 space-y-3 border-t border-line pt-4">
+        {canQuote && (
+          <QuoteForm
+            key={order.quote ? order.quote.totalNgn : "none"}
+            order={order}
+            rates={rates}
+            busy={busy}
+            onSend={(details) => send("quoted", { details })}
+          />
+        )}
+
         <label className="block text-sm">
           <span className="mb-1 block font-medium">Note to customer <span className="font-normal text-ink-soft">(optional, e.g. carrier and tracking number)</span></span>
           <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} className={inputClass} placeholder="e.g. DHL 1234567890" />
@@ -113,7 +192,7 @@ function OrderCard({ order, onChange }: { order: AdminOrder; onChange: (o: Admin
               }
               className={primaryButton + " !py-2.5 text-sm"}
             >
-              {next === "paid" ? "Mark payment received (bank transfer)" : ACTION_LABEL[next]}
+              {next === "paid" ? "Mark payment received (bank transfer)" : order.status === "rejected" ? "Reopen as quote" : ACTION_LABEL[next]}
             </button>
           )}
           {order.status !== "rejected" && order.status !== "delivered" && (
@@ -209,7 +288,9 @@ function CustomerRow({ c }: { c: AdminCustomer }) {
   );
 }
 
-export default function AdminConsole({ initialOrders, customers }: { initialOrders: AdminOrder[]; customers: AdminCustomer[] }) {
+export default function AdminConsole({
+  initialOrders, customers, rates,
+}: { initialOrders: AdminOrder[]; customers: AdminCustomer[]; rates: Rates }) {
   const [orders, setOrders] = useState(initialOrders);
   const [tab, setTab] = useState<"orders" | "customers">("orders");
   const [filter, setFilter] = useState<Filter>("action");
@@ -226,7 +307,7 @@ export default function AdminConsole({ initialOrders, customers }: { initialOrde
     return orders.filter((o) => {
       if (filter === "action" ? !needsAction(o.status) : filter !== "all" && o.status !== filter) return false;
       if (!q) return true;
-      return [o.title, o.id, o.customer.name, o.customer.email, o.customer.phone].some((v) => v.toLowerCase().includes(q));
+      return [o.title, o.id, o.url, o.customer.name, o.customer.email, o.customer.phone].some((v) => v.toLowerCase().includes(q));
     });
   }, [orders, filter, query]);
 
@@ -276,7 +357,7 @@ export default function AdminConsole({ initialOrders, customers }: { initialOrde
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by item, customer, email, phone or order ID"
+            placeholder="Search by item, link, customer, email, phone or order ID"
             aria-label="Search orders"
             className={inputClass + " mt-4"}
           />
@@ -285,7 +366,7 @@ export default function AdminConsole({ initialOrders, customers }: { initialOrde
           ) : (
             <ul className="mt-5 space-y-4">
               {shown.map((o) => (
-                <OrderCard key={o.id} order={o} onChange={(u) => setOrders((all) => all.map((x) => (x.id === u.id ? u : x)))} />
+                <OrderCard key={o.id} order={o} rates={rates} onChange={(u) => setOrders((all) => all.map((x) => (x.id === u.id ? u : x)))} />
               ))}
             </ul>
           )}

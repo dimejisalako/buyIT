@@ -21,7 +21,7 @@ export default function TermsPage() {
 
         <section>
           <h2>2. Requests and quotes</h2>
-          <p>When you submit a request you give us the item, its price and its approximate weight. The estimate you see is not a final price. We check the item and send a final quote. You are only charged once you pay a quote, and we only buy an item after you have paid. If the price, weight or availability is different from what you entered, we may change the quote or decline the request.</p>
+          <p>When you submit a request you send us a link to an item. We check the item, work out its price, weight and shipping, and send you a quote in naira. You are only charged once you pay a quote, and we only buy an item after you have paid. If the price or availability changes before you pay, we may update the quote or decline the request.</p>
         </section>
 
         <section>
