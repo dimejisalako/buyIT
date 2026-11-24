@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,10 +12,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "Shop Amazon.com from Nigeria. Paste a product link, get your total in naira, and we buy it, ship it and track it to your door.";
+
 export const metadata: Metadata = {
-  title: "Shopbrow - Your Amazon Shopping Assistant for Nigeria",
-  description: "Shop from Amazon.com with ease! We buy for you and ship to Nigeria. $1.50 service fee per item plus shipping by weight.",
+  metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+  title: { default: "Shopbrow: Amazon, delivered to Nigeria", template: "%s | Shopbrow" },
+  description,
+  openGraph: {
+    title: "Shopbrow: Amazon, delivered to Nigeria",
+    description,
+    siteName: "Shopbrow",
+    type: "website",
+    images: [{ url: "/logo.png", width: 727, height: 512, alt: "Shopbrow" }],
+  },
+  twitter: { card: "summary", title: "Shopbrow: Amazon, delivered to Nigeria", description },
 };
+
+export const viewport: Viewport = { themeColor: "#faf8f4" };
 
 export default function RootLayout({
   children,
@@ -24,11 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className={geistSans.variable + " " + geistMono.variable + " antialiased"}>{children}</body>
     </html>
   );
 }
