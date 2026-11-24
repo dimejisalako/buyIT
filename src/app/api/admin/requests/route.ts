@@ -1,42 +1,45 @@
 import { NextResponse } from "next/server";
-import { isAdmin } from "../../../../lib/adminAuth";
-import { getRequest, listRequests, updateRequest, STATUSES, type RequestStatus } from "../../../../lib/requests";
+import { requireAdmin } from "../../../../lib/auth";
 import { notifyStatus } from "../../../../lib/notify";
-import { siteUrl, trackUrl } from "../../../../lib/site";
+import { getRequest, updateRequest } from "../../../../lib/requests";
+import { orderUrl, siteUrl } from "../../../../lib/site";
+import { STATUSES, transitionError, type RequestStatus } from "../../../../lib/status";
+import { getUserById, publicUser } from "../../../../lib/users";
 
-const unauthorized = () => NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const fail = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 
-export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
-  try {
-    return NextResponse.json({ success: true, requests: await listRequests() });
-  } catch (error) {
-    console.error("Admin requests error:", error);
-    return NextResponse.json({ error: "Failed to fetch requests" }, { status: 500 });
-  }
-}
-
-// Changing status emails the customer. "paid" can only be set by a verified payment, never by hand
-// here, except when an admin records an offline payment (e.g. bank transfer) with offline: true.
+// Move an order to a new status, optionally with a note (e.g. a tracking number). The customer is emailed.
+// "paid" can only be set by Paystack, or here with offline: true to record a bank transfer.
 export async function PATCH(request: Request) {
-  if (!isAdmin(request)) return unauthorized();
+  const admin = await requireAdmin(request);
+  if (admin instanceof NextResponse) return admin;
   try {
-    const { id, status, offline } = await request.json();
-    if (typeof id !== "string" || !STATUSES.includes(status as RequestStatus)) {
-      return NextResponse.json({ error: "Invalid id or status" }, { status: 400 });
-    }
-    if (status === "paid" && offline !== true) {
-      return NextResponse.json({ error: "Paid is set by Paystack. Pass offline: true to record a bank transfer." }, { status: 400 });
-    }
-    const existing = await getRequest(id);
-    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (existing.status === status) return NextResponse.json({ success: true, request: existing });
+    const { id, status, note, offline } = await request.json();
+    if (typeof id !== "string" || !STATUSES.includes(status as RequestStatus)) return fail("Invalid order or status.");
+    if (status === "paid" && offline !== true) return fail("Paid is set by Paystack. Use the bank-transfer button to record an offline payment.");
+    const cleanNote = typeof note === "string" ? note.trim().slice(0, 300) : "";
 
-    const updated = await updateRequest(id, status === "paid" ? { status, paidAt: new Date().toISOString() } : { status });
-    if (updated) await notifyStatus(updated, status, trackUrl(siteUrl(request), updated.id, updated.token));
+    const existing = await getRequest(id);
+    if (!existing) return fail("Order not found.", 404);
+    const problem = transitionError(existing, status as RequestStatus);
+    if (problem) return fail(problem, 409);
+
+    const to = status as RequestStatus;
+    const updated = await updateRequest(
+      id,
+      to === "paid"
+        ? { status: to, paidAt: new Date().toISOString(), note: cleanNote || "Paid by bank transfer" }
+        : { status: to, note: cleanNote }
+    );
+    if (!updated) return fail("Order not found.", 404);
+
+    if (to !== existing.status) {
+      const owner = await getUserById(updated.userId);
+      if (owner) await notifyStatus(updated, publicUser(owner), to, cleanNote || undefined, orderUrl(siteUrl(request), updated.id));
+    }
     return NextResponse.json({ success: true, request: updated });
   } catch (error) {
     console.error("Admin update error:", error);
-    return NextResponse.json({ error: "Failed to update request" }, { status: 500 });
+    return fail("Failed to update the order.", 500);
   }
 }

@@ -1,14 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
-// Brand mark (hummingbird + price tag) beside the wordmark. Links home.
-export default function Logo({ height = 52 }: { height?: number }) {
+// The brand mark on its own (no wordmark). Links home.
+export default function Logo({ height = 56 }: { height?: number }) {
   return (
-    <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Shopbrow home">
-      <Image src="/logo.png" alt="" width={Math.round(height * 1.42)} height={height} priority />
-      <span className="text-xl font-semibold tracking-tight">
-        Shop<span className="text-sage">brow</span>
-      </span>
+    <Link href="/" className="inline-flex items-center" aria-label="Shopbrow home">
+      <Image src="/logo.png" alt="Shopbrow" width={Math.round(height * 1.42)} height={height} priority />
     </Link>
   );
 }

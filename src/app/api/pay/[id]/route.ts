@@ -1,32 +1,37 @@
 import { NextResponse } from "next/server";
-import { getRequest, tokenMatches, updateRequest, rateLimited } from "../../../../lib/requests";
+import { requireUser } from "../../../../lib/auth";
 import { initializeTransaction, paymentsEnabled } from "../../../../lib/paystack";
-import { siteUrl, trackUrl } from "../../../../lib/site";
+import { rateLimited } from "../../../../lib/redis";
+import { getRequest, updateRequest } from "../../../../lib/requests";
+import { orderUrl, siteUrl } from "../../../../lib/site";
+
+const fail = (error: string, status: number) => NextResponse.json({ success: false, error }, { status });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await requireUser(request);
+  if (user instanceof NextResponse) return user;
   const { id } = await params;
-  const { t } = await request.json().catch(() => ({ t: null }));
 
   const req = await getRequest(id);
-  if (!req || !tokenMatches(req, t)) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (req.status !== "quoted") return NextResponse.json({ error: "This request isn't ready for payment." }, { status: 409 });
-  if (!paymentsEnabled()) return NextResponse.json({ error: "Online payment isn't available yet. We'll contact you." }, { status: 503 });
-  if (await rateLimited(`pay:${id}`, 10, 3600)) return NextResponse.json({ error: "Too many attempts." }, { status: 429 });
+  if (!req || req.userId !== user.id) return fail("Not found", 404);
+  if (req.status !== "quoted") return fail("This order isn't ready for payment.", 409);
+  if (!paymentsEnabled()) return fail("Online payment isn't available yet. Please pay by bank transfer using the details shown.", 503);
+  if (await rateLimited("pay:" + id, 10, 3600)) return fail("Too many attempts.", 429);
 
   try {
     // A fresh reference per attempt; only the latest one can settle the request.
-    const reference = `${req.id}_${Date.now().toString(36)}`;
+    const reference = req.id + "_" + Date.now().toString(36);
     const txn = await initializeTransaction({
-      email: req.email,
+      email: user.email,
       amountKobo: req.quote.totalNgn * 100,
       reference,
-      callbackUrl: trackUrl(siteUrl(request), req.id, req.token),
+      callbackUrl: orderUrl(siteUrl(request), req.id),
       requestId: req.id,
     });
     await updateRequest(id, { paymentRef: reference });
-    return NextResponse.json({ url: txn.authorization_url });
+    return NextResponse.json({ success: true, url: txn.authorization_url });
   } catch (error) {
     console.error("Pay init error:", error);
-    return NextResponse.json({ error: "Couldn't start payment. Please try again." }, { status: 502 });
+    return fail("Couldn't start payment. Please try again.", 502);
   }
 }

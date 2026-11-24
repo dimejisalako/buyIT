@@ -1,39 +1,49 @@
 # Shopbrow
 
-Nigerians paste an Amazon.com link. We buy it, consolidate it and ship it to Nigeria. Pay in naira.
+Nigerians paste an Amazon.com link. We buy it, ship it to Nigeria and track it to their door. They pay in naira.
 
 ## How it works
 
-1. **Request** (`/request`): the customer pastes a link, enters price, weight and quantity, and gets an itemised estimate in USD and naira.
-2. **Review** (`/admin/requests`): you check the item and set the request to **quoted**. The customer is emailed a link.
-3. **Pay** (`/track/[id]`): the customer pays through Paystack. A verified payment moves the request to **paid** automatically.
-4. **Fulfil**: you move it through **purchased**, **shipped** and **delivered**. Each change emails the customer.
+1. **Sign up.** Customers create an account (name, email, phone, password).
+2. **Request** (`/request`). They paste an Amazon link and enter the item name, price and weight, and see an itemised estimate in USD and naira.
+3. **Quote** (`/admin`). You check the item and press **Send quote**. The customer is emailed.
+4. **Pay.** On their order page the customer pays through Paystack, or by bank transfer using the details in `PAYMENT_INSTRUCTIONS`. A verified Paystack payment marks the order paid automatically. For a bank transfer, press **Mark payment received** once the money arrives.
+5. **Fulfil.** In `/admin`, press the next button as the order moves: **Mark purchased**, **Mark received in US**, **Mark shipped**, **Mark arrived in Nigeria**, **Mark delivered**. Add a note (such as a carrier and tracking number) and the customer sees it in their account and by email.
 
-The landing page (`/`) is the waitlist. Admin pages are at `/admin/waitlist` and `/admin/requests` and need `ADMIN_KEY`.
+Customers see all their orders and the full update history at `/account`.
 
-## Setup
+## First-time setup
 
-```bash
-cp .env.example .env.local   # fill it in
-npm install
-npm run dev
-```
+1. Copy `.env.example` to `.env.local` and fill it in (see the table below), or set the same variables in Vercel.
+2. `npm install` then `npm run dev` (or deploy).
+3. Open `/admin/setup`, enter your `ADMIN_KEY`, and create the admin account. You can use the same page later to reset the admin password.
+4. Log in at `/login`. Admins land on `/admin`.
 
 | Variable | Needed for |
 | --- | --- |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Storing the waitlist and requests (required) |
-| `ADMIN_KEY` | Admin pages (required; they refuse everyone without it) |
-| `PAYSTACK_SECRET_KEY` | Online payment. Add the webhook `{SITE_URL}/api/paystack/webhook` in the Paystack dashboard |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL` | Email. Without a key, emails are skipped and logged |
-| `SITE_URL` | Links in emails and the payment callback |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | The database (required) |
+| `ADMIN_KEY` | Creating or resetting the admin account (required) |
+| `SITE_URL` | Links in emails, payment callbacks, sitemap (required in production) |
 | `SERVICE_FEE_USD`, `SHIPPING_USD_PER_LB`, `US_SALES_TAX_RATE`, `DUTY_RATE`, `PAYMENT_FEE_RATE`, `NGN_PER_USD`, `FX_BUFFER_RATE` | The quote engine. **Defaults are placeholders**; set real values before charging anyone |
+| `PAYMENT_INSTRUCTIONS` | Bank-transfer details shown on quoted orders while Paystack is off |
+| `PAYSTACK_SECRET_KEY` | Online payment. Add the webhook `{SITE_URL}/api/paystack/webhook` in Paystack |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL` | Email. Without a key, emails are skipped and logged |
+| `SUPPORT_EMAIL`, `WHATSAPP_NUMBER` | Contact details in the footer and legal pages |
 
 ## Safety notes
 
-- Customers get a secret token in their tracking link. It is required to view or pay for a request, and the tracking API never returns their contact details.
-- A payment only counts if Paystack confirms it, the amount matches the quote in naira, and the reference is the latest one issued for that request. The webhook signature is checked and the transaction is re-verified with Paystack.
-- Amazon links are parsed strictly (`amazon.com` and its subdomains only). Price and weight are entered by the customer and checked by you before you set **quoted**. We do not scrape Amazon.
+- Passwords are stored as salted scrypt hashes. Sessions are random tokens kept server-side, sent in an HttpOnly, SameSite=Lax cookie, and expire after 30 days. Changing or resetting a password signs the user out everywhere.
+- Logins, signups, payments and admin setup are rate limited. Cross-site form posts are rejected.
+- A customer can only see and pay for their own orders. Admin pages and routes require an admin account.
+- A payment only counts if Paystack confirms it, the amount matches the quote in naira, and the reference is the latest issued for that order. The webhook signature is checked and the transaction is re-verified with Paystack.
+- Orders can't be marked purchased or shipped before they are paid, and **paid** can't be set by hand except as an explicit bank transfer.
+- Amazon links are parsed strictly (`amazon.com` and its subdomains only). Price and weight are entered by the customer and checked by you before you send the quote. We do not scrape Amazon.
+
+## Known limits
+
+- No self-service password reset yet (needs email). Admins reset a customer's password from the Customers tab.
+- Orders are listed by scanning all orders. That's fine for launch; add per-user indexes when volume grows.
 
 ## Scripts
 
-`npm test` (unit tests), `npm run build`, `npm run typecheck`. CI runs tests and a build on every PR.
+`npm test` (unit tests), `npm run build`, `npm run test:e2e` (boots the built app against fake Redis and Paystack servers and drives the whole flow; run `npm run build` first), `npm run typecheck`. CI runs all of these on every PR.
