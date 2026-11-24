@@ -5,12 +5,11 @@ import { card, errorBox, inputClass, primaryButton } from "./ui";
 
 export default function RequestForm() {
   const router = useRouter();
-  const [form, setForm] = useState({ url: "", title: "", priceUsd: "", weightLb: "", quantity: "1", note: "" });
+  const [url, setUrl] = useState("");
+  const [note, setNote] = useState("");
+  const [showNote, setShowNote] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
-  const set = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,12 +19,7 @@ export default function RequestForm() {
       const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          priceUsd: Number(form.priceUsd),
-          weightLb: Number(form.weightLb),
-          quantity: Number(form.quantity),
-        }),
+        body: JSON.stringify({ url, note }),
       });
       const data = await res.json();
       if (data.success) {
@@ -44,48 +38,46 @@ export default function RequestForm() {
   return (
     <form onSubmit={submit} className={card + " space-y-5"}>
       <div>
-        <h1 className="text-2xl font-semibold">Request an item</h1>
-        <p className="mt-1 text-ink-soft">Paste an Amazon link. You&apos;ll see a naira estimate straight away.</p>
+        <h1 className="text-2xl font-semibold">Paste your Amazon link</h1>
+        <p className="mt-1 text-ink-soft">That&apos;s all we need. We&apos;ll check the item and send you your total in naira.</p>
       </div>
 
       <div>
-        <label htmlFor="url" className="mb-1.5 block text-sm font-medium">Amazon link</label>
-        <input id="url" name="url" value={form.url} onChange={set} placeholder="https://www.amazon.com/dp/…" className={inputClass} required />
-      </div>
-      <div>
-        <label htmlFor="title" className="mb-1.5 block text-sm font-medium">Item name</label>
-        <input id="title" name="title" value={form.title} onChange={set} placeholder="e.g. Sony WH-1000XM5 headphones" maxLength={120} className={inputClass} required />
+        <label htmlFor="url" className="sr-only">Amazon link</label>
+        <input
+          id="url"
+          name="url"
+          type="url"
+          inputMode="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Paste the link here"
+          className={inputClass + " py-4 text-base"}
+          autoFocus
+          required
+        />
+        <p className="mt-2 text-xs text-ink-soft">
+          On the Amazon app or website, tap <strong>Share</strong> and then <strong>Copy link</strong>.
+        </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {showNote ? (
         <div>
-          <label htmlFor="priceUsd" className="mb-1.5 block text-sm font-medium">Price (USD)</label>
-          <input id="priceUsd" name="priceUsd" type="number" min="0.01" step="0.01" inputMode="decimal" value={form.priceUsd} onChange={set} className={inputClass} required />
+          <label htmlFor="note" className="mb-1.5 block text-sm font-medium">
+            Size, colour or anything else <span className="font-normal text-ink-soft">(optional)</span>
+          </label>
+          <textarea id="note" name="note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className={inputClass} />
         </div>
-        <div>
-          <label htmlFor="weightLb" className="mb-1.5 block text-sm font-medium">Weight (lb)</label>
-          <input id="weightLb" name="weightLb" type="number" min="0.1" step="0.1" inputMode="decimal" value={form.weightLb} onChange={set} className={inputClass} required />
-        </div>
-        <div>
-          <label htmlFor="quantity" className="mb-1.5 block text-sm font-medium">Quantity</label>
-          <input id="quantity" name="quantity" type="number" min="1" max="20" step="1" value={form.quantity} onChange={set} className={inputClass} required />
-        </div>
-      </div>
-      <p className="-mt-2 text-xs text-ink-soft">
-        Copy the price and approximate weight from the Amazon page (look under &ldquo;Product information&rdquo;). We check both before you pay anything.
-      </p>
-
-      <div>
-        <label htmlFor="note" className="mb-1.5 block text-sm font-medium">
-          Anything we should know? <span className="font-normal text-ink-soft">(optional)</span>
-        </label>
-        <textarea id="note" name="note" rows={2} value={form.note} onChange={set} maxLength={500} className={inputClass} placeholder="Size, colour, delivery city…" />
-      </div>
+      ) : (
+        <button type="button" onClick={() => setShowNote(true)} className="text-sm text-sage underline underline-offset-2 hover:text-sage-dark">
+          Add a note (size, colour…)
+        </button>
+      )}
 
       {error && <p role="alert" className={errorBox}>{error}</p>}
 
-      <button type="submit" disabled={busy} className={primaryButton + " w-full"}>
-        {busy ? "Working out your estimate…" : "Get my estimate"}
+      <button type="submit" disabled={busy || !url.trim()} className={primaryButton + " w-full"}>
+        {busy ? "Sending…" : "Send link"}
       </button>
     </form>
   );

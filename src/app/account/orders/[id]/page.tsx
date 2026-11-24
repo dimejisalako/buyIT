@@ -63,7 +63,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         )}
       </div>
 
-      {req.status === "quoted" && user.id === req.userId && (
+      {req.status === "quoted" && req.quote && user.id === req.userId && (
         <div className={card + " mt-5 space-y-4"}>
           <h2 className="font-semibold">Pay for this order</h2>
           {online ? (
@@ -86,10 +86,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
       {req.status === "new" && (
         <p className="mt-5 rounded-xl bg-sage/10 px-4 py-3 text-sm text-sage-dark">
-          We&apos;re checking your item. When it&apos;s ready you&apos;ll be able to pay here.
+          We&apos;re checking your item and working out the weight and shipping. Your total in naira will appear here, and we&apos;ll let you know when it&apos;s ready.
         </p>
       )}
 
+      {req.quote && (
       <div className={card + " mt-5"}>
         <h2 className="font-semibold">Your quote</h2>
         <dl className="mt-3 divide-y divide-line">
@@ -107,9 +108,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </div>
         </dl>
         <p className="text-xs text-ink-soft">
-          Quantity {req.quote.quantity}. Tax, duty and shipping are estimates until we confirm your item. Naira at ₦{req.quote.ngnPerUsd.toLocaleString("en-NG")} per $1.
+          Quantity {req.quote.quantity}. Tax and duty are estimates and may change if customs charges differ. Naira at ₦{req.quote.ngnPerUsd.toLocaleString("en-NG")} per $1.
         </p>
       </div>
+      )}
 
       <div className={card + " mt-5"}>
         <h2 className="font-semibold">Updates</h2>

@@ -23,7 +23,7 @@ function OrderRow({ r }: { r: ProductRequest }) {
         <div className="min-w-0">
           <p className="truncate font-medium">{r.title}</p>
           <p className="mt-0.5 text-sm text-ink-soft">
-            {ngn(r.quote.totalNgn)} · Qty {r.quote.quantity} · {date(r.createdAt)}
+            {r.quote ? ngn(r.quote.totalNgn) + " · Qty " + r.quote.quantity : "Preparing your quote"} · {date(r.createdAt)}
           </p>
         </div>
         <StatusBadge status={r.status} />
@@ -63,7 +63,7 @@ export default async function AccountPage() {
       {orders.length === 0 ? (
         <div className={card + " mt-8 text-center"}>
           <h2 className="text-lg font-semibold">No orders yet</h2>
-          <p className="mt-1 text-ink-soft">Paste an Amazon link and we&apos;ll work out the total in naira.</p>
+          <p className="mt-1 text-ink-soft">Paste an Amazon link and we&apos;ll send you the total in naira.</p>
           <Link href="/request" className={primaryButton + " mt-5 inline-block"}>Request your first item</Link>
         </div>
       ) : (

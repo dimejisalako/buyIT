@@ -5,8 +5,8 @@ Nigerians paste an Amazon.com link. We buy it, ship it to Nigeria and track it t
 ## How it works
 
 1. **Sign up.** Customers create an account (name, email, phone, password).
-2. **Request** (`/request`). They paste an Amazon link and enter the item name, price and weight, and see an itemised estimate in USD and naira.
-3. **Quote** (`/admin`). You check the item and press **Send quote**. The customer is emailed.
+2. **Request** (`/request`). They paste an Amazon link. That's all (an optional note for size or colour). Short links from the Amazon app (`a.co`, `amzn.to`) work too.
+3. **Quote** (`/admin`). You open the link, then enter the item name, price, weight and quantity. A live preview shows the customer's total in naira. Press **Send quote** and the customer is emailed. You can update and re-send the quote until it's paid.
 4. **Pay.** On their order page the customer pays through Paystack, or by bank transfer using the details in `PAYMENT_INSTRUCTIONS`. A verified Paystack payment marks the order paid automatically. For a bank transfer, press **Mark payment received** once the money arrives.
 5. **Fulfil.** In `/admin`, press the next button as the order moves: **Mark purchased**, **Mark received in US**, **Mark shipped**, **Mark arrived in Nigeria**, **Mark delivered**. Add a note (such as a carrier and tracking number) and the customer sees it in their account and by email.
 
@@ -37,7 +37,7 @@ Customers see all their orders and the full update history at `/account`.
 - A customer can only see and pay for their own orders. Admin pages and routes require an admin account.
 - A payment only counts if Paystack confirms it, the amount matches the quote in naira, and the reference is the latest issued for that order. The webhook signature is checked and the transaction is re-verified with Paystack.
 - Orders can't be marked purchased or shipped before they are paid, and **paid** can't be set by hand except as an explicit bank transfer.
-- Amazon links are parsed strictly (`amazon.com` and its subdomains only). Price and weight are entered by the customer and checked by you before you send the quote. We do not scrape Amazon.
+- Amazon links are parsed strictly (`amazon.com` and its subdomains, plus the `a.co`/`amzn.to` short links). Price and weight are entered by you, the admin, after checking the item. We do not scrape Amazon.
 
 ## Known limits
 

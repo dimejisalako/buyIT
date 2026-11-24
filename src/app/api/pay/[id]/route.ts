@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const req = await getRequest(id);
   if (!req || req.userId !== user.id) return fail("Not found", 404);
-  if (req.status !== "quoted") return fail("This order isn't ready for payment.", 409);
+  if (req.status !== "quoted" || !req.quote) return fail("This order isn't ready for payment.", 409);
   if (!paymentsEnabled()) return fail("Online payment isn't available yet. Please pay by bank transfer using the details shown.", 503);
   if (await rateLimited("pay:" + id, 10, 3600)) return fail("Too many attempts.", 429);
 

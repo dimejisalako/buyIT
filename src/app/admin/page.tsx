@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import AdminConsole, { type AdminCustomer, type AdminOrder } from "../../components/AdminConsole";
 import Shell from "../../components/Shell";
 import { getCurrentUser } from "../../lib/auth";
+import { rates } from "../../lib/quote";
 import { listRequests } from "../../lib/requests";
 import { listUsers } from "../../lib/users";
 
@@ -32,13 +33,13 @@ export default async function AdminPage() {
         phone: u.phone ?? "",
         createdAt: u.createdAt,
         orderCount: mine.length,
-        paidNgn: mine.filter((r) => r.paidAt).reduce((sum, r) => sum + r.quote.totalNgn, 0),
+        paidNgn: mine.filter((r) => r.paidAt && r.quote).reduce((sum, r) => sum + (r.quote?.totalNgn ?? 0), 0),
       };
     });
 
   return (
     <Shell width="max-w-5xl">
-      <AdminConsole initialOrders={orders} customers={customers} />
+      <AdminConsole initialOrders={orders} customers={customers} rates={rates()} />
     </Shell>
   );
 }

@@ -10,28 +10,24 @@ export async function notifyReceived(req: ProductRequest, user: PublicUser, link
     to: user.email,
     subject: "We got your Shopbrow request",
     text:
-      "Hi " + user.name + ",\n\nThanks for your request for " + req.title +
-      ". We'll check the item and email you when your quote is ready to pay. Nothing is charged until then.\n\nFollow it any time:\n" +
+      "Hi " + user.name + ",\n\nThanks for sending your link. We'll check the item, work out the weight and shipping, and email you your total in naira. Nothing is charged until you've seen it and paid.\n\nFollow it any time:\n" +
       link + sign,
   });
   const admin = process.env.ADMIN_EMAIL;
   if (admin) {
     await sendEmail({
       to: admin,
-      subject: "New request " + req.id + ": $" + req.quote.totalUsd.toFixed(2),
-      text:
-        user.name + " <" + user.email + ">\n" + req.title + "\n" + req.url + "\nQty " + req.quote.quantity +
-        ", total $" + req.quote.totalUsd.toFixed(2) + " / N" + req.quote.totalNgn.toLocaleString() + "\n" + (req.note ?? ""),
+      subject: "New request " + req.id + " from " + user.name,
+      text: user.name + " <" + user.email + ">" + (user.phone ? " " + user.phone : "") + "\n" + req.url + "\n" + (req.note ? "Note: " + req.note + "\n" : "") + "\nPrepare the quote in the admin page.",
     });
   }
 }
 
 export async function notifyStatus(req: ProductRequest, user: PublicUser, status: RequestStatus, note: string | undefined, link: string) {
+  const total = req.quote ? "N" + req.quote.totalNgn.toLocaleString() + " (about $" + req.quote.totalUsd.toFixed(2) + ")" : "";
   const intro: Record<RequestStatus, string> = {
     new: "We received your request.",
-    quoted:
-      "Your quote for " + req.title + " is ready: N" + req.quote.totalNgn.toLocaleString() +
-      " (about $" + req.quote.totalUsd.toFixed(2) + "). Review it and pay here.",
+    quoted: "Your quote for " + req.title + " is ready: " + total + ". Review it and pay here.",
     paid: "We received your payment for " + req.title + ". Thank you! We'll order it next.",
     purchased: "We've ordered " + req.title + " from Amazon.",
     received: req.title + " has arrived at our US address. It will ship to Nigeria in our next weekly shipment.",

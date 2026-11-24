@@ -19,7 +19,7 @@ export interface ProductRequest {
   asin: string;
   url: string;
   note?: string;
-  quote: Quote;
+  quote?: Quote; // set by the admin once they have checked the item
   status: RequestStatus;
   paymentRef?: string;
   paidAt?: string;
@@ -31,7 +31,7 @@ export interface ProductRequest {
 const KEY = "shopbrow:requests";
 
 export async function addRequest(
-  data: Pick<ProductRequest, "userId" | "title" | "asin" | "url" | "note" | "quote">
+  data: Pick<ProductRequest, "userId" | "title" | "asin" | "url" | "note">
 ): Promise<ProductRequest> {
   const now = new Date().toISOString();
   const req: ProductRequest = {
@@ -62,7 +62,7 @@ export async function listRequestsByUser(userId: string): Promise<ProductRequest
 
 export async function updateRequest(
   id: string,
-  patch: Partial<Pick<ProductRequest, "paymentRef" | "paidAt">> & { status?: RequestStatus; note?: string }
+  patch: Partial<Pick<ProductRequest, "paymentRef" | "paidAt" | "quote" | "title">> & { status?: RequestStatus; note?: string }
 ): Promise<ProductRequest | null> {
   const existing = await getRequest(id);
   if (!existing) return null;
