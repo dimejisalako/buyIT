@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import Logo from "../../../components/Logo";
 import { STATUS_LABEL, TIMELINE, type RequestStatus } from "../../../lib/status";
 
 interface View {
@@ -127,9 +127,7 @@ export default function TrackPage() {
   return (
     <div className="min-h-screen bg-cream text-ink">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          Shop<span className="text-sage">brow</span>
-        </Link>
+        <Logo />
       </header>
       <main className="mx-auto max-w-xl px-6 pb-20 pt-6">
         <Suspense fallback={<p className="text-ink-soft">Loading…</p>}>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Logo from "../components/Logo";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-white px-4 py-3 text-ink placeholder:text-ink-soft/60 focus:border-sage focus:outline-none focus:ring-4 focus:ring-sage/15";
@@ -116,9 +117,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-cream text-ink">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <span className="text-xl font-semibold tracking-tight">
-          Shop<span className="text-sage">brow</span>
-        </span>
+        <Logo />
         <span className="text-sm text-ink-soft">Coming soon</span>
       </header>
 

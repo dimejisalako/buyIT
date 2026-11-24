@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Logo from "../../components/Logo";
 
 interface Quote {
   lines: { label: string; usd: number }[];
@@ -48,9 +49,7 @@ export default function RequestPage() {
   return (
     <div className="min-h-screen bg-cream text-ink">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          Shop<span className="text-sage">brow</span>
-        </Link>
+        <Logo />
         <Link href="/" className="text-sm text-ink-soft hover:text-ink">Back</Link>
       </header>
 
